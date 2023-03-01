@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint,EarlyStopping
 
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 import plotly.express as px
 
 from conf.settings import Settings
@@ -62,18 +64,22 @@ def plot_latent_space(pictures,classes,estimator):
     
     
 
-#def plot_losses(history):
+def morph(pictures,classes,class_a,class_b,estimator,amount_of_vector_multipliers):
     
+    latent_space_a = estimator.encoder.predict(pictures[classes == class_a])
+    mean_latent_space_a= np.expand_dims(latent_space_a.mean(axis = 0),axis = 0)
 
+    latent_space_b = estimator.encoder.predict(pictures[classes == class_b])
+    mean_latent_space_b = np.expand_dims(latent_space_b.mean(axis = 0),axis = 0)
 
-
+    class_ab_dict  = {}
+    for i in np.linspace(0, 2, num = amount_of_vector_multipliers, endpoint=True, retstep=False, dtype=None, axis=0):   
+        class_ab_dict[i] = estimator.decoder.predict( mean_latent_space_a + i *  mean_latent_space_b)
     
-
-    
-#generate
-
-#morph
-
-#mix
-
-#etc
+    keys = list(class_ab_dict.keys())
+    current_key = 0
+    fig, axs = plt.subplots(1,amount_of_vector_multipliers, figsize=(30,30))
+    for col in range(amount_of_vector_multipliers):      
+        axs[col].imshow(class_ab_dict[keys[current_key]][0],cmap = "gray")
+        axs[col].set_title(f'alpha:{round(keys[current_key],2)}')
+        current_key += 1   
